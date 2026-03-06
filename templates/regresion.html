@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Regresión Lineal</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+background:#081428;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+
+canvas{
+width:600px !important;
+height:400px !important;
+margin:auto;
+}
+
+table{
+margin:auto;
+margin-top:20px;
+border-collapse:collapse;
+}
+
+td,th{
+border:1px solid white;
+padding:6px;
+}
+
+button{
+margin:5px;
+padding:8px 14px;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Regresión Lineal</h1>
+
+<input type="file" id="archivo">
+
+<br><br>
+
+<button onclick="calcular()">Calcular</button>
+<button onclick="limpiar()">Limpiar</button>
+<button onclick="window.location.href='/'">Inicio</button>
+
+<h2 id="ecuacion"></h2>
+
+<canvas id="grafica"></canvas>
+
+<table id="tabla"></table>
+
+
+<script>
+
+let grafico;
+
+function calcular(){
+
+let archivo=document.getElementById("archivo").files[0]
+
+let form=new FormData()
+
+form.append("archivo",archivo)
+
+fetch("/api/regresion",{
+method:"POST",
+body:form
+})
+.then(r=>r.json())
+.then(data=>{
+
+mostrarTabla(data.x,data.y)
+
+graficar(data)
+
+document.getElementById("ecuacion").innerHTML=
+"y = "+data.m.toFixed(2)+"x + "+data.b.toFixed(2)+" | MSE="+data.mse.toFixed(2)
+
+})
+
+}
+
+function limpiar(){
+
+document.getElementById("tabla").innerHTML=""
+document.getElementById("ecuacion").innerHTML=""
+document.getElementById("archivo").value=""
+
+if(grafico) grafico.destroy()
+
+}
+
+function mostrarTabla(x,y){
+
+let tabla=document.getElementById("tabla")
+
+tabla.innerHTML="<tr><th>X</th><th>Y</th></tr>"
+
+for(let i=0;i<x.length;i++){
+
+tabla.innerHTML+=`<tr>
+<td>${x[i]}</td>
+<td>${y[i]}</td>
+</tr>`
+
+}
+
+}
+
+function graficar(data){
+
+let ctx=document.getElementById("grafica")
+
+if(grafico) grafico.destroy()
+
+let linea=data.x.map(v=>data.m*v+data.b)
+
+grafico=new Chart(ctx,{
+
+type:"scatter",
+
+data:{
+
+datasets:[
+
+{
+label:"Datos",
+data:data.x.map((v,i)=>({x:v,y:data.y[i]})),
+backgroundColor:"cyan"
+},
+
+{
+label:"Linea",
+data:data.x.map((v,i)=>({x:v,y:linea[i]})),
+type:"line",
+borderColor:"yellow"
+}
+
+]
+
+},
+
+options:{
+scales:{
+x:{ticks:{color:"white"}},
+y:{ticks:{color:"white"}}
+}
+}
+
+})
+
+}
+
+</script>
+
+</body>
+</html>

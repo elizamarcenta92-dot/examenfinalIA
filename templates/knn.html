@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>KNN</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+background:#081428;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+
+canvas{
+width:600px !important;
+height:400px !important;
+margin:auto;
+}
+
+table{
+margin:auto;
+margin-top:20px;
+border-collapse:collapse;
+}
+
+td,th{
+border:1px solid white;
+padding:6px;
+}
+
+button{
+margin:5px;
+padding:8px 14px;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>KNN Clasificación</h1>
+
+<input type="file" id="archivo">
+
+<br><br>
+
+X <input id="x">
+Y <input id="y">
+K <input id="k" value="3">
+
+<br><br>
+
+<button onclick="clasificar()">Clasificar</button>
+<button onclick="limpiar()">Limpiar</button>
+<button onclick="window.location.href='/'">Inicio</button>
+
+<h2 id="resultado"></h2>
+
+<canvas id="grafica"></canvas>
+
+<table id="tabla"></table>
+
+<script>
+
+let grafico
+
+function clasificar(){
+
+let archivo=document.getElementById("archivo").files[0]
+
+let x=document.getElementById("x").value
+let y=document.getElementById("y").value
+let k=document.getElementById("k").value
+
+let form=new FormData()
+
+form.append("archivo",archivo)
+form.append("x",x)
+form.append("y",y)
+form.append("k",k)
+
+fetch("/api/knn",{
+method:"POST",
+body:form
+})
+.then(r=>r.json())
+.then(data=>{
+
+document.getElementById("resultado").innerHTML=
+"Clase Predicha: "+data.prediccion
+
+mostrarTabla(data.datos)
+
+graficar(data)
+
+})
+
+}
+
+function limpiar(){
+
+document.getElementById("tabla").innerHTML=""
+document.getElementById("resultado").innerHTML=""
+
+document.getElementById("archivo").value=""
+document.getElementById("x").value=""
+document.getElementById("y").value=""
+
+if(grafico) grafico.destroy()
+
+}
+
+function mostrarTabla(datos){
+
+let tabla=document.getElementById("tabla")
+
+tabla.innerHTML="<tr><th>X</th><th>Y</th><th>Clase</th></tr>"
+
+datos.forEach(d=>{
+
+tabla.innerHTML+=`<tr>
+<td>${d[0]}</td>
+<td>${d[1]}</td>
+<td>${d[2]}</td>
+</tr>`
+
+})
+
+}
+
+function graficar(data){
+
+let ctx=document.getElementById("grafica")
+
+if(grafico) grafico.destroy()
+
+let A=[]
+let B=[]
+
+data.datos.forEach(d=>{
+
+if(d[2]=="A") A.push({x:d[0],y:d[1]})
+else B.push({x:d[0],y:d[1]})
+
+})
+
+grafico=new Chart(ctx,{
+
+type:"scatter",
+
+data:{
+
+datasets:[
+
+{
+label:"Clase A",
+data:A,
+backgroundColor:"cyan"
+},
+
+{
+label:"Clase B",
+data:B,
+backgroundColor:"orange"
+},
+
+{
+label:"Nuevo Punto",
+data:[{x:data.nuevo[0],y:data.nuevo[1]}],
+backgroundColor:"red",
+borderColor:"white",
+pointRadius:8
+}
+
+]
+
+},
+
+options:{
+scales:{
+x:{ticks:{color:"white"}},
+y:{ticks:{color:"white"}}
+}
+}
+
+})
+
+}
+
+</script>
+
+</body>
+
+</html>
