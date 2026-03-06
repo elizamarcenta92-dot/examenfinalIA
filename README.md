@@ -149,7 +149,3 @@ La aplicación genera gráficos dinámicos.
 **KNN**
 - Mapa de puntos
 - Colores por clase
-
----
-
-## Estructura del Proyecto
